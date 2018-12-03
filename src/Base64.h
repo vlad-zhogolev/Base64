@@ -13,7 +13,7 @@
 
 class Base64 {
 public:
-    using Byte = unsigned char;
+    using Byte = char;
 
     static constexpr size_t ENCODE_BUFFER_SIZE = 3;
     static constexpr size_t DECODE_BUFFER_SIZE = 4;

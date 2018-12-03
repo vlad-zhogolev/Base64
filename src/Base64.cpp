@@ -73,8 +73,8 @@ void Base64::encodeStream(std::istream& is, std::ostream& os)
     size_t charsRead = 0;
     array<Byte, ENCODE_BUFFER_SIZE> buf{{}};
 
-    is >> noskipws;
-    while (charsRead < ENCODE_BUFFER_SIZE && is >> buf[charsRead])
+
+    while (charsRead < ENCODE_BUFFER_SIZE && /*is >> buf[charsRead]*/ is.get(buf[charsRead]))
         ++charsRead;
     while (charsRead == ENCODE_BUFFER_SIZE)
     {
@@ -85,13 +85,13 @@ void Base64::encodeStream(std::istream& is, std::ostream& os)
            << toBase64[buf[2] & 0x3fu];
 
         charsRead = 0;
-        while (charsRead < ENCODE_BUFFER_SIZE && is >> buf[charsRead])
+        while (charsRead < ENCODE_BUFFER_SIZE && /*is >> buf[charsRead]*/is.get(buf[charsRead]))
             ++charsRead;
     }
-    is >> skipws;
 
     if (charsRead == 0)
         return;
+
     os << toBase64[(buf[0] & 0xfcu) >> 2];
     if (charsRead == 1)
         os << toBase64[(buf[0] & 0x03u) << 4] << "==";
@@ -108,8 +108,7 @@ void Base64::decodeStream(std::istream& is, std::ostream& os)
     array<Byte, DECODE_BUFFER_SIZE> buf{{}};
     size_t charsRead = 0;
 
-    is >> noskipws;
-    while (charsRead < DECODE_BUFFER_SIZE && is >> buf[charsRead])
+    while (charsRead < DECODE_BUFFER_SIZE && is.get(buf[charsRead]))
         ++charsRead;
     while (charsRead == DECODE_BUFFER_SIZE && buf[DECODE_BUFFER_SIZE - 1] != '=')
     {
@@ -123,20 +122,19 @@ void Base64::decodeStream(std::istream& is, std::ostream& os)
            << static_cast<Byte>((decodeByte(buf[2]) << 6) + decodeByte(buf[3]));
 
         charsRead = 0;
-        while (charsRead < DECODE_BUFFER_SIZE && is >> buf[charsRead])
+        while (charsRead < DECODE_BUFFER_SIZE && is.get(buf[charsRead]))
             ++charsRead;
     }
-    is >> skipws;
 
     // Check that we have something to write and it's valid
     if (charsRead == 0)
         return;
+
     if (charsRead < DECODE_BUFFER_SIZE)
         throw std::invalid_argument("Passed input stream didn't contain enough characters to decode stream");
-    if (!(isBase64(buf[0]) && isBase64(buf[1]) && (isBase64(buf[2]) || buf[3] == '=')))
+
+    if (!(isBase64(buf[0]) && isBase64(buf[1]) && (isBase64(buf[2]) || buf[2] == '=')))
         throw std::invalid_argument("String contents don't satisfy Base64");
-    /*if (!isValid(buf))
-        throw std::invalid_argument("Passed input stream contents didn't satisfy Base64");*/
 
     os << static_cast<Byte>((decodeByte(buf[0]) << 2) + (decodeByte(buf[1]) >> 4));
     if (buf[2] != '=')
@@ -153,11 +151,6 @@ bool Base64::isValid(const std::array<Byte, DECODE_BUFFER_SIZE>& buf)
             return false;
     }
     return true;
-    /*if (!(isBase64(buf[3]) || buf[3] == '='))
-        return false;
-    if (!(isBase64(buf[2]) || buf[2] == '='))
-        return false;
-    return isBase64(buf[0]) && isBase64(buf[1]);*/
 }
 
 //TODO:: change this so it doesn't allow "==" and "=" in string
@@ -170,11 +163,6 @@ bool Base64::isValid(const std::string& str, size_t pos)
             return false;
     }
     return true;
-    /*if (!(isBase64(static_cast<Byte>(str[pos + 3])) || str[pos + 3] == '='))
-        return false;
-    if (!(isBase64(static_cast<Byte>(str[pos + 2])) || str[pos + 2] == '='))
-        return false;
-    return isBase64(static_cast<Byte>(str[pos])) && isBase64(static_cast<Byte>(str[pos + 1]));*/
 }
 
 Base64::Byte Base64::decodeByte(Byte byte)

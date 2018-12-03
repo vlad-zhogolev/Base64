@@ -9,35 +9,35 @@ using namespace std;
 
 int main()
 {
-    ifstream fin("input.txt");
-    fstream encoded("encoded.txt");
-    ofstream decoded("decoded.txt");
+    ifstream fin("cat.jpg", ios_base::binary);
+    ofstream outEncoded("inEncoded.txt", ios_base::binary);
 #ifdef  BASE64_STRING
     string str = "Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust\n"
             "of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds\n"
             "the short vehemence of any carnal pleasure.";
-    encoded << Base64::encodeString(str);
+    outEncoded << Base64::encodeString(str);
 #endif
 
 #ifdef BASE64_STREAM
-    Base64::encodeStream(fin, encoded);
+    Base64::encodeStream(fin, outEncoded);
 #endif
 
-    encoded.close();
-    encoded.open("encoded.txt");
+    outEncoded.close();
+    ifstream inEncoded("inEncoded.txt", ios_base::binary);
+    ofstream decoded("decoded.jpg", ios_base::binary);
 
 #ifdef  BASE64_STRING
     string enc;
-    encoded >> noskipws >> enc;
+    inEncoded >> noskipws >> enc;
     decoded << Base64::decodeString(enc);
 #endif
 
 #ifdef BASE64_STREAM
-    Base64::decodeStream(encoded, decoded);
+    Base64::decodeStream(inEncoded, decoded);
 #endif
 
     decoded.close();
-    encoded.close();
+    outEncoded.close();
     fin.close();
     return 0;
 }
